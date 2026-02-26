@@ -96,7 +96,12 @@ Only use column PO#, Item No, Metal, Q'ty, Total w't, maklon, Non US Dia, and to
 if maklon is not exist but manufacturing is exist, then use manufacturing to replace 
 '''
 def colfilter(df):
-    df = df[['buyer','po#', 'item_no', 'metal', 'qty', 'total_wt', 'maklon', 'non_us_dia', 'total']]
+    # if df has 24k_payment, then use it, else create new column 24k_payment and fill with 0
+    if '24k_payment' in df.columns:
+        df['24k_payment'] = df['24k_payment'].fillna(0)
+    else:
+        df['24k_payment'] = 0
+    df = df[['buyer','po#', 'item_no', 'metal', 'qty', 'total_wt', 'maklon', 'non_us_dia', 'total','24k_payment']]
     return df
 
 # adjust value of column PO#
@@ -145,6 +150,7 @@ def addtolist(df, itemlist_path):
         ws.cell(row=lastrow+i, column=7).value = df.iloc[i]['maklon']
         ws.cell(row=lastrow+i, column=8).value = df.iloc[i]['non_us_dia']
         ws.cell(row=lastrow+i, column=9).value = df.iloc[i]['total']
+        ws.cell(row=lastrow+i, column=10).value = df.iloc[i]['24k_payment']
     wb.save(itemlist_path)
 
 def resultcleansing():
@@ -152,7 +158,7 @@ def resultcleansing():
     wb = openpyxl.load_workbook('results/itemlist.xlsx')
     ws = wb.active
 
-    # evaluate column C. delete row if value is empty
+    # evaluate column D. delete row if value is empty
     for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
         if not row[2].value:
             ws.delete_rows(row[0].row)
